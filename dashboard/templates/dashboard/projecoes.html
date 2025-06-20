@@ -1,0 +1,368 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Projeções de Vendas{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Título -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-900">Projeções de Vendas</h1>
+        <div class="text-sm text-gray-500">
+            Modelo: <span class="font-semibold text-blue-600">Random Forest</span> | 
+            Precisão: <span class="font-semibold text-green-600">58.8%</span>
+        </div>
+    </div>
+
+    <!-- Cards de Métricas do Modelo -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-600">Erro Médio Absoluto (MAE)</p>
+                    <p class="text-2xl font-bold text-gray-900">R$ 231,64</p>
+                    <p class="text-xs text-gray-500 mt-1">Diferença média entre predição e realidade</p>
+                </div>
+                <div class="p-3 bg-blue-100 rounded-full">
+                    <i class="fas fa-chart-line text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-600">Coeficiente R²</p>
+                    <p class="text-2xl font-bold text-gray-900">0.588</p>
+                    <p class="text-xs text-gray-500 mt-1">58.8% da variância explicada</p>
+                </div>
+                <div class="p-3 bg-green-100 rounded-full">
+                    <i class="fas fa-bullseye text-green-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-600">RMSE</p>
+                    <p class="text-2xl font-bold text-gray-900">R$ 513,29</p>
+                    <p class="text-xs text-gray-500 mt-1">Raiz do erro quadrático médio</p>
+                </div>
+                <div class="p-3 bg-purple-100 rounded-full">
+                    <i class="fas fa-calculator text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Predição de Receita Mensal -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-calendar-alt mr-2 text-blue-600"></i>
+            Predição de Receita Mensal - Próximos 3 Meses
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div id="receita-mes-1" class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-1">Mês 1</p>
+                    <p class="text-lg font-semibold text-blue-700" id="mes-1-nome">Carregando...</p>
+                    <p class="text-2xl font-bold text-blue-900" id="mes-1-valor">R$ -</p>
+                </div>
+            </div>
+            <div id="receita-mes-2" class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-1">Mês 2</p>
+                    <p class="text-lg font-semibold text-green-700" id="mes-2-nome">Carregando...</p>
+                    <p class="text-2xl font-bold text-green-900" id="mes-2-valor">R$ -</p>
+                </div>
+            </div>
+            <div id="receita-mes-3" class="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-1">Mês 3</p>
+                    <p class="text-lg font-semibold text-purple-700" id="mes-3-nome">Carregando...</p>
+                    <p class="text-2xl font-bold text-purple-900" id="mes-3-valor">R$ -</p>
+                </div>
+            </div>
+        </div>
+        <div id="chart-receita-mensal" style="height: 300px;"></div>
+    </div>
+
+    <!-- Simulador de Predição de Produto -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-box mr-2 text-orange-600"></i>
+            Simulador de Predição de Vendas por Produto
+            <span class="text-sm font-normal text-gray-500 ml-2">(Regressão Logística)</span>
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Código do Produto (produto_id)</label>
+                <input type="text" id="produto-id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Ex: 00006332">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Produto (produto_nome)</label>
+                <input type="text" id="produto-nome" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Ex: TOALHA BANHO">
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4 mb-4">
+            <button onclick="simularProduto()" class="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors">
+                <i class="fas fa-search mr-2"></i>Simular Predição
+            </button>
+            <button onclick="limparSimulacao()" class="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">
+                <i class="fas fa-eraser mr-2"></i>Limpar
+            </button>
+        </div>
+
+        <!-- Resultado da Simulação -->
+        <div id="resultado-produto" class="hidden">
+            <div class="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border border-orange-200 mb-4">
+                <h4 class="font-semibold text-orange-800 mb-2">Produto Encontrado:</h4>
+                <p class="text-sm text-gray-700"><strong>ID:</strong> <span id="produto-resultado-id">-</span></p>
+                <p class="text-sm text-gray-700"><strong>Nome:</strong> <span id="produto-resultado-nome">-</span></p>
+                <p class="text-sm text-gray-700"><strong>Fabricante:</strong> <span id="produto-resultado-fabricante">-</span></p>
+            </div>
+            
+            <!-- Gráfico de Predições -->
+            <div id="chart-produto-predicoes" style="height: 300px;"></div>
+            
+            <!-- Resumo Estatístico -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div class="bg-blue-50 p-3 rounded-lg text-center">
+                    <p class="text-sm text-gray-600">Probabilidade Média</p>
+                    <p class="text-lg font-bold text-blue-700" id="prob-media">-</p>
+                </div>
+                <div class="bg-green-50 p-3 rounded-lg text-center">
+                    <p class="text-sm text-gray-600">Quantidade Total</p>
+                    <p class="text-lg font-bold text-green-700" id="qtd-total">-</p>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-lg text-center">
+                    <p class="text-sm text-gray-600">Melhor Dia</p>
+                    <p class="text-lg font-bold text-yellow-700" id="melhor-dia">-</p>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-lg text-center">
+                    <p class="text-sm text-gray-600">Acurácia Modelo</p>
+                    <p class="text-lg font-bold text-purple-700" id="acuracia-modelo">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagem de Erro -->
+        <div id="erro-produto" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+                <p class="text-red-700" id="erro-mensagem">Erro ao buscar produto</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+google.charts.load('current', {'packages':['corechart', 'line']});
+google.charts.setOnLoadCallback(carregarDados);
+
+let dadosReceita = [];
+let dadosProduto = [];
+
+function carregarDados() {
+    // Carregar predições de receita mensal
+    fetch('/api/receita-mensal/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.predicoes) {
+                dadosReceita = data.predicoes;
+                atualizarReceitaMensal(data.predicoes);
+                drawReceitaMensal(data.predicoes);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar receita mensal:', error);
+        });
+}
+
+function atualizarReceitaMensal(predicoes) {
+    predicoes.forEach((predicao, index) => {
+        const mesNum = index + 1;
+        document.getElementById(`mes-${mesNum}-nome`).textContent = predicao.mes_nome;
+        document.getElementById(`mes-${mesNum}-valor`).textContent = 
+            'R$ ' + predicao.receita_prevista.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    });
+}
+
+function drawReceitaMensal(predicoes) {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Mês');
+    data.addColumn('number', 'Receita Prevista');
+    
+    predicoes.forEach(predicao => {
+        data.addRow([predicao.mes_nome, predicao.receita_prevista]);
+    });
+    
+    const options = {
+        title: 'Predição de Receita Mensal',
+        hAxis: {
+            title: 'Mês',
+            titleTextStyle: {color: '#333'}
+        },
+        vAxis: {
+            title: 'Receita (R$)',
+            format: 'currency'
+        },
+        legend: {position: 'none'},
+        colors: ['#3b82f6'],
+        backgroundColor: 'transparent',
+        chartArea: {left: 80, top: 50, width: '85%', height: '75%'},
+        curveType: 'function',
+        lineWidth: 3,
+        pointSize: 8
+    };
+    
+    const chart = new google.visualization.LineChart(document.getElementById('chart-receita-mensal'));
+    chart.draw(data, options);
+}
+
+function simularProduto() {
+    const produtoId = document.getElementById('produto-id').value.trim();
+    const produtoNome = document.getElementById('produto-nome').value.trim();
+    
+    if (!produtoId && !produtoNome) {
+        mostrarErro('Por favor, informe o código ou nome do produto');
+        return;
+    }
+    
+    // Esconder resultados anteriores
+    document.getElementById('resultado-produto').classList.add('hidden');
+    document.getElementById('erro-produto').classList.add('hidden');
+    
+    const dados = {};
+    if (produtoId) dados.produto_id = produtoId;
+    if (produtoNome) dados.produto_nome = produtoNome;
+    
+    fetch('/api/simular-produto/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(dados)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            mostrarErro(data.error);
+        } else {
+            mostrarResultadoProduto(data);
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao simular produto:', error);
+        mostrarErro('Erro ao conectar com o servidor');
+    });
+}
+
+function mostrarResultadoProduto(data) {
+    // Preencher informações do produto
+    document.getElementById('produto-resultado-id').textContent = data.produto_id;
+    document.getElementById('produto-resultado-nome').textContent = data.produto_nome;
+    document.getElementById('produto-resultado-fabricante').textContent = data.fabricante;
+    
+    // Calcular estatísticas
+    const predicoes = data.predicoes;
+    const probMedia = predicoes.reduce((sum, p) => sum + p.probabilidade_venda, 0) / predicoes.length;
+    const qtdTotal = predicoes.reduce((sum, p) => sum + p.quantidade_estimada, 0);
+    const melhorDia = predicoes.reduce((max, p) => p.probabilidade_venda > max.probabilidade_venda ? p : max);
+    
+    document.getElementById('prob-media').textContent = (probMedia * 100).toFixed(1) + '%';
+    document.getElementById('qtd-total').textContent = qtdTotal;
+    document.getElementById('melhor-dia').textContent = new Date(melhorDia.data).toLocaleDateString('pt-BR');
+    document.getElementById('acuracia-modelo').textContent = '73.6%'; // Acurácia do modelo logístico
+    
+    // Desenhar gráfico
+    drawProdutoPredicoes(predicoes);
+    
+    // Mostrar resultado
+    document.getElementById('resultado-produto').classList.remove('hidden');
+    dadosProduto = data;
+}
+
+function drawProdutoPredicoes(predicoes) {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Data');
+    data.addColumn('number', 'Probabilidade de Venda');
+    data.addColumn('number', 'Quantidade Estimada');
+    
+    predicoes.forEach(predicao => {
+        const dataFormatada = new Date(predicao.data).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'});
+        data.addRow([dataFormatada, predicao.probabilidade_venda * 100, predicao.quantidade_estimada]);
+    });
+    
+    const options = {
+        title: 'Predições de Vendas do Produto - Próximos 30 Dias',
+        hAxis: {
+            title: 'Data',
+            titleTextStyle: {color: '#333'},
+            slantedText: true,
+            slantedTextAngle: 45
+        },
+        vAxes: {
+            0: {
+                title: 'Probabilidade (%)',
+                textStyle: {color: '#f59e0b'}
+            },
+            1: {
+                title: 'Quantidade',
+                textStyle: {color: '#10b981'}
+            }
+        },
+        series: {
+            0: {
+                type: 'line',
+                targetAxisIndex: 0,
+                color: '#f59e0b',
+                lineWidth: 2
+            },
+            1: {
+                type: 'columns',
+                targetAxisIndex: 1,
+                color: '#10b981'
+            }
+        },
+        backgroundColor: 'transparent',
+        chartArea: {left: 80, top: 50, width: '85%', height: '75%'}
+    };
+    
+    const chart = new google.visualization.ComboChart(document.getElementById('chart-produto-predicoes'));
+    chart.draw(data, options);
+}
+
+function mostrarErro(mensagem) {
+    document.getElementById('erro-mensagem').textContent = mensagem;
+    document.getElementById('erro-produto').classList.remove('hidden');
+    document.getElementById('resultado-produto').classList.add('hidden');
+}
+
+function limparSimulacao() {
+    document.getElementById('produto-id').value = '';
+    document.getElementById('produto-nome').value = '';
+    document.getElementById('resultado-produto').classList.add('hidden');
+    document.getElementById('erro-produto').classList.add('hidden');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+

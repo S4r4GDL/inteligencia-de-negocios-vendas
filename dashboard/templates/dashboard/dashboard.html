@@ -1,0 +1,280 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Dashboard de Vendas{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Título -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard de Vendas</h1>
+        <div class="text-sm text-gray-500">
+            Última atualização: <span id="last-update"></span>
+        </div>
+    </div>
+
+    <!-- Cards de Métricas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="card bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-600">Total de Vendas</p>
+                    <p class="text-2xl font-bold text-gray-900" id="total-vendas">-</p>
+                </div>
+                <div class="p-3 bg-blue-100 rounded-full">
+                    <i class="fas fa-shopping-cart text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-600">Faturamento Total</p>
+                    <p class="text-2xl font-bold text-gray-900" id="faturamento-total">-</p>
+                </div>
+                <div class="p-3 bg-green-100 rounded-full">
+                    <i class="fas fa-dollar-sign text-green-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-600">Lucro Total</p>
+                    <p class="text-2xl font-bold text-gray-900" id="lucro-total">-</p>
+                </div>
+                <div class="p-3 bg-purple-100 rounded-full">
+                    <i class="fas fa-chart-line text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-600">Ticket Médio</p>
+                    <p class="text-2xl font-bold text-gray-900" id="ticket-medio">-</p>
+                </div>
+                <div class="p-3 bg-orange-100 rounded-full">
+                    <i class="fas fa-receipt text-orange-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos Linha 1 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Vendas Por Mês</h3>
+            <div id="chart-vendas-mes" style="height: 300px;"></div>
+        </div>
+
+        <div class="card bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 10 Produtos Mais Vendidos</h3>
+            <div id="chart-top-produtos" style="height: 300px;"></div>
+        </div>
+    </div>
+
+    <!-- Gráficos Linha 2 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 10 Clientes</h3>
+            <div id="chart-top-clientes" style="height: 300px;"></div>
+        </div>
+
+        <div class="card bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Média de Vendas Por Dia da Semana</h3>
+            <div id="chart-vendas-dia-semana" style="height: 300px;"></div>
+        </div>
+
+        <div class="card bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Vendas Por Horário</h3>
+            <div id="chart-vendas-horario" style="height: 300px;"></div>
+        </div>
+    </div>
+
+    <!-- Listas -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Produtos Mais Vendidos</h3>
+            <div class="space-y-3" id="lista-top-produtos">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+
+        <div class="card bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 5 Clientes que Mais Gastaram</h3>
+            <div class="space-y-3" id="lista-top-clientes">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+google.charts.load('current', {'packages':['corechart', 'bar']});
+google.charts.setOnLoadCallback(loadDashboardData);
+
+function loadDashboardData() {
+    fetch('/api/dashboard/')
+        .then(response => response.json())
+        .then(data => {
+            updateMetricas(data.metricas);
+            drawVendasPorMes(data.vendas_por_mes);
+            drawTopProdutos(data.top_produtos);
+            drawTopClientes(data.top_clientes);
+            drawVendasDiaSemana(data.vendas_dia_semana);
+            drawVendasPorHora(data.vendas_por_hora);
+            updateListas(data.top_produtos, data.top_clientes);
+            
+            document.getElementById('last-update').textContent = new Date().toLocaleString('pt-BR');
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados:', error);
+        });
+}
+
+function updateMetricas(metricas) {
+    document.getElementById('total-vendas').textContent = metricas.total_vendas.toLocaleString('pt-BR');
+    document.getElementById('faturamento-total').textContent = 'R$ ' + metricas.faturamento_total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    document.getElementById('lucro-total').textContent = 'R$ ' + metricas.lucro_total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    document.getElementById('ticket-medio').textContent = 'R$ ' + metricas.ticket_medio.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+}
+
+function drawVendasPorMes(vendas) {
+    const data = new google.visualization.DataTable();
+    data.addColumn("string", "Mês");
+    data.addColumn("number", "Faturamento");
+    
+    vendas.forEach(venda => {
+        const mes = new Date(venda.mes + "T00:00:00").toLocaleDateString("pt-BR", {year: "numeric", month: "short"});
+        data.addRow([mes, parseFloat(venda.total)]);
+    });
+    
+    const options = {
+        title: 'Faturamento por Mês',
+        hAxis: {title: 'Mês'},
+        vAxis: {title: 'Faturamento (R$)', format: 'currency'},
+        legend: {position: 'none'},
+        colors: ['#3b82f6']
+    };
+    
+    const chart = new google.visualization.ColumnChart(document.getElementById('chart-vendas-mes'));
+    chart.draw(data, options);
+}
+
+function drawTopProdutos(produtos) {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Produto');
+    data.addColumn('number', 'Quantidade');
+    
+    produtos.slice(0, 10).forEach(produto => {
+        data.addRow([produto.produto_nome.substring(0, 30) + (produto.produto_nome.length > 30 ? "..." : ""), parseInt(produto.quantidade_total)]);
+    });
+    
+    const options = {
+        title: 'Top 10 Produtos por Quantidade',
+        legend: {position: 'none'},
+        colors: ['#10b981']
+    };
+    
+    const chart = new google.visualization.BarChart(document.getElementById('chart-top-produtos'));
+    chart.draw(data, options);
+}
+
+function drawTopClientes(clientes) {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Cliente');
+    data.addColumn('number', 'Total Gasto');
+    
+    clientes.slice(0, 10).forEach(cliente => {
+        data.addRow([cliente.nome || cliente.cliente_id, parseFloat(cliente.total_gasto)]);
+    });
+    
+    const options = {
+        title: 'Top 10 Clientes por Valor',
+        legend: {position: 'none'},
+        colors: ['#8b5cf6']
+    };
+    
+    const chart = new google.visualization.BarChart(document.getElementById('chart-top-clientes'));
+    chart.draw(data, options);
+}
+
+function drawVendasDiaSemana(vendas) {
+    const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Dia da Semana');
+    data.addColumn('number', 'Média de Vendas');
+    
+    vendas.forEach(venda => {
+        const dia = diasSemana[venda.dia_semana - 1];
+        data.addRow([dia, parseFloat(venda.media_vendas)]);
+    });
+    
+    const options = {
+        title: 'Média de Vendas por Dia da Semana',
+        legend: {position: 'none'},
+        colors: ['#f59e0b']
+    };
+    
+    const chart = new google.visualization.ColumnChart(document.getElementById('chart-vendas-dia-semana'));
+    chart.draw(data, options);
+}
+
+function drawVendasPorHora(vendas) {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Hora');
+    data.addColumn('number', 'Quantidade de Vendas');
+    
+    vendas.forEach(venda => {
+        data.addRow([venda.hora + "h", parseInt(venda.quantidade)]);
+    });
+    
+    const options = {
+        title: 'Vendas por Horário',
+        legend: {position: 'none'},
+        colors: ['#ef4444']
+    };
+    
+    const chart = new google.visualization.LineChart(document.getElementById('chart-vendas-horario'));
+    chart.draw(data, options);
+}
+
+function updateListas(produtos, clientes) {
+    // Lista de produtos
+    const listaProdutos = document.getElementById('lista-top-produtos');
+    listaProdutos.innerHTML = '';
+    produtos.slice(0, 5).forEach((produto, index) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+        item.innerHTML = `
+            <div class="flex items-center">
+                <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">${index + 1}</span>
+                <span class="font-medium">${produto.produto_nome.substring(0, 40)}...</span>
+            </div>
+            <span class="text-blue-600 font-bold">${produto.quantidade_total}</span>
+        `;
+        listaProdutos.appendChild(item);
+    });
+    
+    // Lista de clientes
+    const listaClientes = document.getElementById('lista-top-clientes');
+    listaClientes.innerHTML = '';
+    clientes.slice(0, 5).forEach((cliente, index) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+        item.innerHTML = `
+            <div class="flex items-center">
+                <span class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">${index + 1}</span>
+                <span class="font-medium">${cliente.nome || cliente.cliente_id}</span>
+            </div>
+            <span class="text-green-600 font-bold">R$ ${cliente.total_gasto.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+        `;
+        listaClientes.appendChild(item);
+    });
+}
+</script>
+{% endblock %}
+

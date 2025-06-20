@@ -1,0 +1,173 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Lista de Clientes{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Título -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-900">Lista de Clientes</h1>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Filtros</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cliente ID</label>
+                <input type="text" id="filtro-cliente-id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite o ID do cliente">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Gênero</label>
+                <select id="filtro-genero" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Todos</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Feminino</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Data Nascimento</label>
+                <input type="date" id="filtro-data-nascimento" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bairro (Nome Set)</label>
+                <input type="text" id="filtro-nome-set" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite o bairro">
+            </div>
+        </div>
+        <div class="flex items-center space-x-2 mt-4">
+            <button onclick="aplicarFiltros()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                <i class="fas fa-filter mr-2"></i>Filtrar
+            </button>
+            <button onclick="limparFiltros()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+                <i class="fas fa-times mr-2"></i>Limpar
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabela de Clientes -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Tabela de Clientes</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gênero</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código Org</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Nascimento</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bairro</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo Parceria</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parceiro</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Primeiro Contato</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último Contato</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Limite Calculado</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-clientes" class="bg-white divide-y divide-gray-200">
+                    <!-- Será preenchido via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div id="loading-clientes" class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+            <p class="text-gray-500 mt-2">Carregando clientes...</p>
+        </div>
+        <div id="no-results-clientes" class="text-center py-8 hidden">
+            <i class="fas fa-search text-2xl text-gray-400"></i>
+            <p class="text-gray-500 mt-2">Nenhum registro encontrado</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    carregarClientes();
+});
+
+function carregarClientes(filtros = {}) {
+    const loading = document.getElementById('loading-clientes');
+    const noResults = document.getElementById('no-results-clientes');
+    const tabela = document.getElementById('tabela-clientes');
+    
+    loading.classList.remove('hidden');
+    noResults.classList.add('hidden');
+    tabela.innerHTML = '';
+    
+    // Construir query string
+    const params = new URLSearchParams();
+    Object.keys(filtros).forEach(key => {
+        if (filtros[key]) {
+            params.append(key, filtros[key]);
+        }
+    });
+    
+    fetch(`/api/clientes/?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+            
+            if (data.clientes && data.clientes.length > 0) {
+                preencherTabelaClientes(data.clientes);
+            } else {
+                noResults.classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar clientes:', error);
+            loading.classList.add('hidden');
+            noResults.classList.remove('hidden');
+        });
+}
+
+function preencherTabelaClientes(clientes) {
+    const tabela = document.getElementById('tabela-clientes');
+    
+    clientes.forEach(cliente => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${cliente.cliente_id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${cliente.genero === 'M' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}">
+                    ${cliente.genero === 'M' ? 'Masculino' : 'Feminino'}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.cod_org}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.data_nascimento}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.nome_set}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.tipo_parceria || '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.parceiro || '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.primeiro_contato}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.ultimo_contato}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">R$ ${cliente.limite_calculado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+        `;
+        
+        tabela.appendChild(row);
+    });
+}
+
+function aplicarFiltros() {
+    const filtros = {
+        cliente_id: document.getElementById('filtro-cliente-id').value,
+        genero: document.getElementById('filtro-genero').value,
+        data_nascimento: document.getElementById('filtro-data-nascimento').value,
+        nome_set: document.getElementById('filtro-nome-set').value
+    };
+    
+    carregarClientes(filtros);
+}
+
+function limparFiltros() {
+    document.getElementById('filtro-cliente-id').value = '';
+    document.getElementById('filtro-genero').value = '';
+    document.getElementById('filtro-data-nascimento').value = '';
+    document.getElementById('filtro-nome-set').value = '';
+    
+    carregarClientes();
+}
+</script>
+{% endblock %}
+
