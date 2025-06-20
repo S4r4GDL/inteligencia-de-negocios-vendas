@@ -24,6 +24,32 @@ Este projeto implementa um **Dashboard Interativo de Vendas** completo com anál
 - Predições para próximos 30 dias
 - Simulador interativo de cenários
 
+---
+Instruções de Execução do Projeto**
+**Status: ✅ COMPLETO E FUNCIONAL**
+---
+
+1. Instalar Bibliotecas
+<li><code>pip install django numpy pandas scikit-learn joblib</code></li>
+
+2. Execute as migrações do banco de dados:
+
+<li><code>python manage.py makemigrations</code>
+<li><code>python manage.py migrate</code></li>
+
+3. Carregue os dados:
+
+<li><code>python load_data.py</code></li>
+
+4. Crie os modelos de predição:
+
+<li><code>python criar_modelos_v2.py</code></li>
+
+5. Inicie o servidor Django:
+
+<li><code>python manage.py runserver</code></li>
+
+---
 ## 🏗️ Arquitetura Técnica
 
 ### Backend
@@ -225,28 +251,3 @@ vendas_dashboard/
 - **Cache:** Redis para performance
 - **API:** Documentação com Swagger
 - **Deploy:** Containerização com Docker
-
----
-
-**Projeto desenvolvido seguindo as especificações do arquivo `pasted_content.txt`**
-**Status: ✅ COMPLETO E FUNCIONAL**
---
-
-1. pip install django numpy pandas scikit-learn joblib
-
-2. Execute as migrações do banco de dados:
-
-<code>python manage.py makemigrations
-python manage.py migrate</code>
-
-3. Carregue os dados:
-
-<code>python load_data.py</code>
-
-4. Crie os modelos de predição:
-
-<code>python criar_modelos_v2.py</code>
-
-5. Inicie o servidor Django:
-
-<code>python manage.py runserver</code>
