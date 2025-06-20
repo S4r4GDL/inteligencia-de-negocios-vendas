@@ -25,7 +25,7 @@ Este projeto implementa um **Dashboard Interativo de Vendas** completo com anál
 - Simulador interativo de cenários
 
 ---
-Instruções de Execução do Projeto**
+**Instruções de Execução do Projeto**<br>
 **Status: ✅ COMPLETO E FUNCIONAL**
 ---
 
