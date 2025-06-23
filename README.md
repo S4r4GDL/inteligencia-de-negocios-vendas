@@ -2,7 +2,7 @@
 
 ## Resumo do Projeto
 
-Este projeto implementa um **Dashboard Interativo de Vendas** completo com análise de dados e predições usando Machine Learning, conforme especificado nas instruções do arquivo `pasted_content.txt`.
+Este projeto implementa um **Dashboard Interativo de Vendas** completo com análise de dados e predições usando Machine Learning
 
 ## Objetivos Alcançados
 
@@ -23,11 +23,6 @@ Este projeto implementa um **Dashboard Interativo de Vendas** completo com anál
 - Precisão de 58.8% (R² = 0.588)
 - Predições para próximos 30 dias
 - Simulador interativo de cenários
-
----
-**Instruções de Execução do Projeto**<br>
-**Status: COMPLETO E FUNCIONAL**
----
 
 1. Instalar Bibliotecas
 <li><code>pip install django numpy pandas scikit-learn joblib</code></li>
@@ -50,7 +45,7 @@ Este projeto implementa um **Dashboard Interativo de Vendas** completo com anál
 <li><code>python manage.py runserver</code></li>
 
 ---
-## 🏗️ Arquitetura Técnica
+## Arquitetura Técnica
 
 ### Backend
 - **Framework:** Django 5.2.3
